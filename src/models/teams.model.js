@@ -1,4 +1,4 @@
-import mongoose, { SchemaTypes } from 'mongoose';
+import mongoose, { Types, SchemaTypes } from 'mongoose';
 
 /**
  * Team Schema
@@ -12,6 +12,42 @@ const TeamSchema = new mongoose.Schema({
   versionKey: false,
   timestamps: true
 });
+
+/**
+ * Statics
+ */
+TeamSchema.statics = {
+  /**
+   * Get a company
+   * @param {ObjectId} userId - The objectId of a user.
+   * @returns {Promise<Team[]>}
+   */
+  get(userId) {
+    return this.aggregate([
+      { $match: { userId: new Types.ObjectId(userId) } },
+      { $group: { _id: '$companyId', contactUser: { $first: '$contactUser' } } },
+      {
+        $lookup: {
+          from: 'companies',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'companies'
+        }
+      },
+      { $unwind: '$companies' },
+      {
+        $project: {
+          id: '$_id',
+          createdAt: '$companies.createdAt',
+          name: '$companies.name',
+          contactUser: '$contactUser'
+        }
+      }
+    ])
+    .exec()
+    .then();
+  }
+};
 
 /**
  * @typedef Team
