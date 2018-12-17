@@ -33,6 +33,15 @@ ApplicationSchema.statics = {
         })
       )
     );
+  },
+
+  /**
+   * Get applications for a user
+   * @param {ObjectId} userId - User Id.
+   * @returns {Promise<Application[]>}
+   */
+  getAllByUser(userId) {
+    return this.find({ userId }).exec().then();
   }
 };
 

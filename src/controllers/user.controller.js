@@ -1,5 +1,6 @@
 import _map from 'lodash/map';
 
+import Users from '../models/users.model';
 import Listings from '../models/listings.model';
 import Applications from '../models/applications.model';
 import { mergeRelations } from '../helpers/utils';
@@ -16,4 +17,21 @@ async function getActiveUsers(req, res) {
   return res.json(mergeRelations(listings, applications, '_id'));
 }
 
-export default { getActiveUsers };
+/**
+ * Get user
+ * @returns {User}
+ */
+async function get(req, res) {
+  const user = await Users.get(req.query.id);
+  const listings = Listings.getAllCreatedByUser(req.query.id);
+  const applications = Applications.getAllByUser(req.query.id);
+
+  // check for user and combine its resources for response
+  return res.json({
+    user,
+    createdListings: await listings,
+    applications: await applications
+  });
+}
+
+export default { get, getActiveUsers };

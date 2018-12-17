@@ -53,6 +53,15 @@ ListingSchema.statics = {
     ])
     .exec()
     .then(listings => _head(listings).data || []);
+  },
+
+  /**
+   * Get listing of a user
+   * @param {String} page - The set of listings to be returned.
+   * @returns {Promise<Listing>}
+   */
+  getAllCreatedByUser(userId) {
+    return this.find({ createdBy: userId }).exec().then();
   }
 };
 
