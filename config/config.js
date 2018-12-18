@@ -13,7 +13,18 @@ const envVarsSchema = Joi.object({
   MONGO_HOST: Joi.string().required()
     .description('Mongo DB host url'),
   MONGO_PORT: Joi.number()
-    .default(27017)
+    .default(27017),
+  POSTGRES_DB: Joi.string()
+    .required()
+    .description('Postgres database name'),
+  POSTGRES_PORT: Joi.number().default(5432),
+  POSTGRES_HOST: Joi.string().default('localhost'),
+  POSTGRES_USER: Joi.string()
+    .required()
+    .description('Postgres username'),
+  POSTGRES_PASSWORD: Joi.string()
+    .allow('')
+    .description('Postgres password')
 }).unknown()
   .required();
 
@@ -28,6 +39,13 @@ const config = {
   mongo: {
     host: envVars.MONGO_HOST,
     port: envVars.MONGO_PORT
+  },
+  postgres: {
+    db: envVars.POSTGRES_DB,
+    port: envVars.POSTGRES_PORT,
+    host: envVars.POSTGRES_HOST,
+    user: envVars.POSTGRES_USER,
+    password: envVars.POSTGRES_PASSWORD
   }
 };
 
