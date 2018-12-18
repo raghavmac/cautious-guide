@@ -1,4 +1,4 @@
-import { Users } from '../../config/sequelize';
+import { Users, Teams, Listings, Applications } from '../../config/sequelize';
 
 /**
  * Get active users list
@@ -15,7 +15,20 @@ async function getActiveUsers(req, res) {
  * @returns {User}
  */
 async function get(req, res) {
-  return res.json({});
+  const { id, created_at, name } = await Users.getById(req.query.id);
+  const connectedCompanies = Teams.getAllByUser(req.query.id);
+  const listings = Listings.getAllByUser(req.query.id);
+  const applications = Applications.getAllByUser(req.query.id);
+
+  // Combine all resources and return the response
+  return res.json({
+    id,
+    created_at,
+    name,
+    companies: await connectedCompanies,
+    createdListings: await listings,
+    applications: await applications
+  });
 }
 
 export default { get, getActiveUsers };

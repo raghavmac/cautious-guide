@@ -1,55 +1,59 @@
-import mongoose, { Types, SchemaTypes } from 'mongoose';
 
-/**
- * Team Schema
- */
-const TeamSchema = new mongoose.Schema({
-  companyId: { type: SchemaTypes.ObjectId, ref: 'Company', required: true },
-  // unique to satisfy composite rule for Object Ids
-  userId: { type: SchemaTypes.ObjectId, ref: 'User', unique: true, required: true },
-  contactUser: { type: Boolean, default: false }
-}, {
-  versionKey: false,
-  timestamps: true
-});
-
-/**
- * Statics
- */
-TeamSchema.statics = {
-  /**
-   * Get a company
-   * @param {ObjectId} userId - The objectId of a user.
-   * @returns {Promise<Team[]>}
-   */
-  get(userId) {
-    return this.aggregate([
-      { $match: { userId: new Types.ObjectId(userId) } },
-      { $group: { _id: '$companyId', contactUser: { $first: '$contactUser' } } },
-      {
-        $lookup: {
-          from: 'companies',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'companies'
-        }
-      },
-      { $unwind: '$companies' },
-      {
-        $project: {
-          id: '$_id',
-          createdAt: '$companies.createdAt',
-          name: '$companies.name',
-          contactUser: '$contactUser'
-        }
+module.exports = (sequelize, DataTypes) => {
+  const Teams = sequelize.define('Teams', {
+    company_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true,
+      references: {
+        model: 'companies',
+        key: 'id'
       }
-    ])
-    .exec()
-    .then();
-  }
-};
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
+    },
+    contact_user: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: false
+    }
+  }, {
+    tableName: 'teams'
+  });
 
-/**
- * @typedef Team
- */
-export default mongoose.model('Team', TeamSchema);
+  /**
+   * Associates
+   */
+  Teams.associate = (models) => {
+    Teams.belongsTo(models.Companies, { as: 'companies', foreignKey: 'company_id' });
+  };
+
+  /**
+   * Statistics
+   */
+  Teams.getAllByUser = function getAllByUser(id) {
+    return Teams.findAll({
+      where: { user_id: id },
+      attributes: [
+        'companies.id', 'companies.name', 'companies.created_at',
+        ['contact_user', 'isContact']
+      ],
+      include: [{
+        model: this.sequelize.import('./companies.model.js'),
+        attributes: [],
+        as: 'companies',
+        required: true
+      }],
+      raw: true
+    });
+  };
+
+  // Model
+  return Teams;
+};

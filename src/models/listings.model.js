@@ -1,71 +1,43 @@
-import mongoose, { Schema } from 'mongoose';
-import _head from 'lodash/head';
 
-/**
- * Listing Schema
- */
-const ListingSchema = new mongoose.Schema({
-  createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  name: { type: String },
-  description: { type: String }
-}, {
-  versionKey: false,
-  timestamps: true
-});
-
-/**
- * Statics
- */
-ListingSchema.statics = {
-  /**
-   * Get listings of an active user
-   * @param {String} page - The set of listings to be returned.
-   * @returns {Promise<Listing>}
-   */
-  getActiveUserListings(page = 1) {
-    return this.aggregate([
-      {
-        $group: {
-          _id: '$createdBy',
-          total: { $sum: 1 },
-          listings: { $push: '$name' }
-        }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'user'
-        }
-      },
-      { $unwind: '$user' },
-      { $sort: { total: -1 } },
-      {
-        $project: {
-          id: '$_id',
-          createdAt: '$user.createdAt',
-          name: '$user.name',
-          listings: '$listings'
-        }
-      },
-      { $facet: { data: [{ $limit: 10 * Number(page) }] } }
-    ])
-    .exec()
-    .then(listings => _head(listings).data || []);
-  },
+module.exports = (sequelize, DataTypes) => {
+  const Listings = sequelize.define('Listings', {
+    id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: sequelize.fn('now')
+    },
+    created_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    }
+  }, {
+    tableName: 'listings'
+  });
 
   /**
-   * Get listing of a user
-   * @param {String} page - The set of listings to be returned.
-   * @returns {Promise<Listing>}
+   * Statistics
    */
-  getAllCreatedByUser(userId) {
-    return this.find({ createdBy: userId }).exec().then();
-  }
+  Listings.getAllByUser = function getAllByUser(id) {
+    return Listings.findAll({ where: { created_by: id } });
+  };
+
+  // Model
+  return Listings;
 };
-
-/**
- * @typedef Listing
- */
-export default mongoose.model('Listing', ListingSchema);

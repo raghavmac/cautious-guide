@@ -1,51 +1,60 @@
-import mongoose, { SchemaTypes } from 'mongoose';
-import _map from 'lodash/map';
-import _groupBy from 'lodash/groupBy';
 
-/**
- * Application Schema
- */
-const ApplicationSchema = new mongoose.Schema({
-  userId: { type: SchemaTypes.ObjectId, ref: 'User', required: true },
-  listingId: { type: SchemaTypes.ObjectId, ref: 'Listing', required: true },
-  coverLetter: { type: String }
-}, {
-  versionKey: false,
-  timestamps: true
-});
+module.exports = (sequelize, DataTypes) => {
+  const Applications = sequelize.define('Applications', {
+    id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: sequelize.fn('now')
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
+    },
+    listing_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'listings',
+        key: 'id'
+      }
+    },
+    cover_letter: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    }
+  }, {
+    tableName: 'applications'
+  });
 
-/**
- * Statics
- */
-ApplicationSchema.statics = {
   /**
-   * Get applications count for list of users
-   * @param {ObjectId<[]} userIds - The array of user ids.
-   * @returns {Promise<Application[]>}
+   * Associates
    */
-  getAllCountsByUser(userIds) {
-    return this.find({ userId: userIds })
-      .exec()
-      .then(applications =>
-        _map(_groupBy(applications, 'userId'), (application, id) => ({
-          _id: id,
-          count: application.length
-        })
-      )
-    );
-  },
+  Applications.associate = (models) => {
+    Applications.belongsTo(models.Listings, { as: 'listings', foreignKey: 'listing_id' });
+  };
 
   /**
-   * Get applications for a user
-   * @param {ObjectId} userId - User Id.
-   * @returns {Promise<Application[]>}
+   * Statistics
    */
-  getAllByUser(userId) {
-    return this.find({ userId }).exec().then();
-  }
+  Applications.getAllByUser = function getAllByUser(id) {
+    return Applications.findAll({
+      where: { user_id: id },
+      include: [{
+        model: this.sequelize.import('./listings.model.js'),
+        required: true,
+        as: 'listings'
+      }]
+    });
+  };
+
+  return Applications;
 };
-
-/**
- * @typedef Application
- */
-export default mongoose.model('Application', ApplicationSchema);
