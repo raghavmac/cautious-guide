@@ -26,11 +26,13 @@ or `yarn` as alternative
 
 * **Unit** - `npm run test` or `yarn test`
 
+**Note** - MongoDB must be running
+
 ## Docker
 
 ```sh
 docker build .
-docker run -d -p 5000:5000 <image_id>
+docker run -d -p 5000:5000 <IMAGE_ID>
 ```
 
 **Note** - Replace **MONGO_HOST** variable in `.env` file as,
