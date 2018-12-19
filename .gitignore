@@ -20,7 +20,6 @@ ehthumbs.db
 Icon?
 Thumbs.db
 dump.rdb
-*.env
 
 # Babel ES6 compiles files
 dist

@@ -14,6 +14,10 @@ npm install
 ```
 or `yarn` as alternative
 
+## Run
+
+`npm start` or `yarn start`
+
 ## Build
 
 `npm run build` or `yarn build`
@@ -21,3 +25,34 @@ or `yarn` as alternative
 ## Test
 
 * **Unit** - `npm run test` or `yarn test`
+
+## Docker
+
+```sh
+docker build .
+docker run -d -p 5000:5000 <image_id>
+```
+
+**Note** - Replace **MONGO_HOST** variable in `.env` file as,
+
+* for Mac users - `docker.for.mac.localhost`
+
+* for Windows users - `docker.for.windows.localhost`
+
+## Endpoints
+
+1. Top active users
+
+```sh
+GET /topActiveUsers
+```
+or
+```sh
+GET /topActiveUsers?page={pageNumber}
+```
+
+2. User resources
+
+```sh
+GET /users?id={user.id}
+```
